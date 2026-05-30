@@ -12,7 +12,7 @@ This repository contains production-oriented AI Agent projects covering multi-tu
 
 ## Projects
 
-### 🤖 Customer Service Agent *(In Progress · Week 5-6)*
+### 🤖 Customer Service Agent *(In Progress)*
 
 Multi-turn dialogue system with tool calling, cost monitoring, and human escalation fallback.
 
@@ -22,7 +22,7 @@ Multi-turn dialogue system with tool calling, cost monitoring, and human escalat
 
 ---
 
-### 📚 RAG Knowledge Base Q&A *(Planned · Week 7-8)*
+### 📚 RAG Knowledge Base Q&A *(Coming Soon)*
 
 Enterprise document Q&A with retrieval optimization and quantitative evaluation.
 
@@ -32,7 +32,7 @@ Enterprise document Q&A with retrieval optimization and quantitative evaluation.
 
 ---
 
-### ⚖️ Contract Risk Review Agent *(Planned · Week 9-10)*
+### ⚖️ Contract Risk Review Agent *(Coming Soon)*
 
 Long-document processing with multi-agent collaboration and MCP protocol.
 
