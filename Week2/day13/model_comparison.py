@@ -19,10 +19,10 @@ claude_client = OpenAI(
     base_url=os.getenv("OPENAI_BASE_URL"),
 )
 
-# DeepSeek 直连
-deepseek_client = OpenAI(
-    api_key=os.getenv("DEEPSEEK_API_KEY"),
-    base_url=os.getenv("DEEPSEEK_BASE_URL"),
+# GPT-5.5（小马代理）
+gpt_client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),
+    base_url=os.getenv("OPENAI_BASE_URL"),
 )
 
 def ask_model(client, model: str, prompt: str, system: str = "你是一个助手。") -> tuple:
@@ -42,8 +42,8 @@ def ask_model(client, model: str, prompt: str, system: str = "你是一个助手
 test_prompt = "请用3句话解释什么是RAG（检索增强生成），并举一个实际应用场景。"
 
 models = [
-    (claude_client,    "claude-sonnet-4-6", "Claude Sonnet 4.6（小马代理）"),
-    (deepseek_client,  "deepseek-v4-flash", "DeepSeek V4 Flash（直连）"),
+    (claude_client, "claude-sonnet-4-6", "Claude Sonnet 4.6（小马代理）"),
+    (gpt_client,    "claude-haiku-4-5",  "Claude Haiku 4.5（小马代理）"),
 ]
 
 print(f"测试 Prompt：{test_prompt}\n")
