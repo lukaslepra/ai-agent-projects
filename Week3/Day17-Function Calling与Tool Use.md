@@ -604,17 +604,33 @@ if __name__ == "__main__":
 
 1. **Function Calling 的完整流程是什么？AI 在这个过程中扮演什么角色，你的代码扮演什么角色？**
 
+   Function Calling 的完整流程分六步：第一步，在工具定义里告诉 API「我有哪些工具、每个工具需要什么参数」；第二步，把工具定义和用户消息一起发给 API；第三步，AI 判断是否需要调用工具，如果需要就返回 `finish_reason="tool_calls"` 和具体的工具名+参数，如果不需要就直接返回文字；第四步，代码拿到工具调用请求后，执行对应的本地 Python 函数；第五步，把函数执行结果作为 `role: tool` 的消息加回 messages；第六步，再次调用 API，AI 看到工具结果后生成最终的自然语言回复。
+
+   AI 是"决策者"——它只决定调用什么工具、传什么参数，不执行代码；代码是"执行者"——真正跑函数、拿结果、维护消息历史。
+
 2. **为什么第一次调用 API 不能直接用 stream=True（当需要工具调用时）？**
+
+   因为流式模式下，工具调用的参数 `arguments` 是分片 chunk 逐步返回的，需要手动拼接才能得到完整的 JSON 字符串，然后才能解析并执行工具。如果直接用 `stream=True` 但没有正确拼接参数，就无法获得完整的 `tool_call_id` 和 `arguments`，工具根本没法调用。所以最简单的做法是：第一次用非流式拿到完整的工具调用信息，执行工具，第二次（最终回答）再用 `stream=True` 流式输出。
 
 3. **`tool_call_id` 是干什么用的？如果有多个工具调用，它怎么保证对应关系不乱？**
 
+   `tool_call_id` 是每次工具调用的唯一 ID，由 API 生成。当 AI 请求多个工具调用时（比如同时查北京和上海的天气），每个调用都有独立的 ID。把工具结果加回 messages 时，必须带上对应的 `tool_call_id`，这样 AI 才知道"这个结果是对应哪一次工具调用的"。如果 ID 对不上，API 会报错，因为 AI 无法正确关联请求和结果。
+
 4. **工具的 `description` 字段为什么很重要？如果写得很模糊会发生什么？**
+
+   AI 完全靠 `description` 来判断「什么时候该用这个工具」。如果 description 写得模糊，AI 可能：选错工具（把查天气的问题发给计算工具）、该用工具时不用（觉得不相关）、或者乱用工具（把不需要工具的问题也触发工具调用）。比如把 get_weather 的 description 写成「获取信息」，AI 可能对任何问题都尝试调用它。description 是 AI 理解工具能力的唯一依据，要写得准确、具体。
 
 5. **面试题（Week 3 第3题，书面作答）：**
 
    面试官问："请描述一下你实现过的 Function Calling，遇到了什么问题，怎么解决的？"
 
-   用 STAR 法回答（Situation → Task → Action → Result），结合今天练习的内容作答。
+   **S（Situation）：** 在学习 LLM API 实战阶段，需要把 AI 从单纯的文字问答升级成能调用外部工具的 Agent，核心就是实现 Function Calling。
+
+   **T（Task）：** 需要实现一个多工具 Agent，让 AI 根据用户问题自动选择调用天气查询、汇率换算或时间查询工具，同时还要把 Function Calling 和流式输出结合起来。
+
+   **A（Action）：** 按照完整的 Function Calling 循环来实现：先用 JSON Schema 格式定义工具（每个工具的 name、description、parameters），第一次非流式调用 API 检查 finish_reason，如果是 tool_calls 就取出工具名和 arguments 执行本地函数，把结果以 `role: tool` 加回 messages，再第二次调用 API 拿最终回答。对于多工具并行调用（比如同时查两个城市天气），用 for 循环遍历所有 tool_calls，逐一执行并加入结果。遇到的主要问题是流式输出时工具调用的处理——如果第一次就用 `stream=True`，arguments 会被拆成碎片，拼接起来很麻烦，所以改成「第一次非流式判断是否需要工具，第二次再用流式输出最终回答」，问题解决。
+
+   **R（Result）：** 最终实现了四个练习：基础计算器 Agent、多工具选择 Agent、Function Calling + 流式输出，以及支持多轮对话的工具聊天。整个 Function Calling 循环跑通，AI 能准确根据问题选择工具、执行并返回自然语言结果。
 
 ---
 
